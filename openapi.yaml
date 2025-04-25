@@ -1,0 +1,1042 @@
+openapi: 3.1.0
+info:
+  title: NextGesAPI
+  description: API for NextGes
+  summary: This documentation provides an overview of the NextGes API, including authentication and entity operations.
+  version: 1.0.0
+  contact:
+    name: NextGes Support
+    email: tristan.deloeil@gmail.com
+    url: https://flendergit.github.io
+  x-logo:
+    url: https://www.svgrepo.com/show/54409/school.svg
+    altText: NextGes Logo
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://example.com/terms
+tags:
+  - name: Authentication
+    description: Authentication operations
+  - name: Users
+    description: User operations
+  - name: Documents
+    description: Document operations
+  - name: Classes
+    description: Class operations
+externalDocs:
+  description: NextGes Documentation
+  url: https://nextges.com/docs
+server:
+  - url: https://api.nextges.com/v1
+    description: Production server
+  - url: https://staging.api.nextges.com/v1
+    description: Staging server
+paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and retrieve an access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+            examples:
+              example1:
+                summary: Example login request
+                value:
+                  email: "exemple@test.com"
+                  password: "password123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: Access token for authenticated requests
+                  jwt:
+                    type: string
+                    description: JWT token for authentication
+              examples:
+                example1:
+                  summary: Successful login response
+                  value:
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user information
+      description: Retrieve information about the authenticated user
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Claims"
+              examples:
+                example1:
+                  summary: Successful user information response
+                  value:
+                    sub: "1234567890"
+                    name: "John Doe"
+                    email: "john.doe@test.com"
+                    scopes:
+                      - "read:users"
+                      - "write:users"
+                    exp: 1700000000
+                    iat: 1600000000
+                    iss: "NextGes API"
+                    aud: "NextGes"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Retrieve a list of all users
+      operationId: getAllUsers
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of users per page (optional)
+          schema:
+            type: integer
+        - name: role
+          in: query
+          required: false
+          description: Role to filter users by (optional)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: User not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/users/{id}:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: Create a new user in the system
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: User not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Users
+      summary: Update an existing user
+      description: Update user information
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: User not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Users
+      summary: Delete a user
+      description: Delete a user from the system
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: User not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/users/schedule:
+    get:
+      tags:
+        - Users
+      summary: Get user schedule
+      description: Retrieve the schedule of the authenticated user for the current week
+      operationId: getUserSchedule
+      parameters:
+        - name: time
+          in: query
+          required: false
+          description: Time formatted as MM-YYYY or DD-MM-YYYY. If not specified, the current week is used.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Timetable"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/documents/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Get a document by ID
+      description: Retrieve a document by its unique identifier
+      operationId: getDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the document to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Document retrieved successfully
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Document not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Documents
+      summary: Upload a new document
+      description: Upload a new document to the system
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                title:
+                  type: string
+                description:
+                  type: string
+                classe:
+                  type: string
+                  description: ID of the class to which the document belongs. If not specified, the document will be shared with all classes of the teacher.
+      responses:
+        "201":
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Document not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/documents:
+    get:
+      tags:
+        - Documents
+      summary: Get all documents
+      description: Retrieve a list of all documents withint the reach of the user. For a teacher, all uploaded documents are available. For a student, only the documents that are shared with him are available.
+      operationId: getAllDocuments
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of documents per page (optional)
+          schema:
+            type: integer
+        - name: class_id
+          in: query
+          required: false
+          description: ID of the class to filter documents by (optional)
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: Type of document to filter by (optional)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Document not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/classes:
+    get:
+      tags:
+        - Classes
+      summary: Get all classes
+      description: Retrieve a list of all classes.
+      operationId: getAllClasses
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of classes per page (optional)
+          schema:
+            type: integer
+        - name: teacher_id
+          in: query
+          required: false
+          description: ID of the teacher to filter classes by (optional)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of classes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Class"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Classes
+      summary: Create a new class
+      description: Create a new class in the system
+      operationId: createClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Class"
+      responses:
+        "201":
+          description: Class created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Class"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/classes/{id}:
+    get:
+      tags:
+        - Classes
+      summary: Get a class by ID
+      description: Retrieve a class by its unique identifier
+      operationId: getClassById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the class to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Class retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassFilled"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Classes
+      summary: Update an existing class
+      description: Update class information
+      operationId: updateClass
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the class to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Class"
+      responses:
+        "200":
+          description: Class updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Class"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/classes/{id}/examens:
+    get:
+      tags:
+        - Classes
+      summary: Get all examens for a class
+      description: Retrieve a list of all examens for a specific class
+      operationId: getAllExamensForClass
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the class to retrieve examens for
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of examens retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Examen"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Classes
+      summary: Create a new examen for a class
+      description: Create a new examen for a specific class
+      operationId: createExamenForClass
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the class to create an examen for
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Examen"
+      responses:
+        "201":
+          description: Examen created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Examen"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Classes
+      summary: Update an existing examen for a class
+      description: Update examen information for a specific class
+      operationId: updateExamenForClass
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the class to update an examen for
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Examen"
+      responses:
+        "200":
+          description: Examen updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Examen"
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Class not found
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+        tags:
+          - Classes
+        summary: Delete an examen for a class
+        description: Delete an examen from a specific class
+        operationId: deleteExamenForClass
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: ID of the class to delete an examen from
+            schema:
+              type: string
+          - name: examen_id
+            in: query
+            required: true
+            description: ID of the examen to delete
+            schema:
+              type: string
+        responses:
+          "204":
+            description: Examen deleted successfully
+          "400":
+            description: Bad request
+          "401":
+            $ref: "#/components/responses/Unauthorized"
+          "403":
+            $ref: "#/components/responses/Forbidden"
+          "404":
+            description: Class not found
+            $ref: "#/components/responses/NotFound"
+          "500":
+            $ref: "#/components/responses/InternalServerError"
+  /api/logs:
+    get:
+      tags:
+        - Logs
+      summary: Get all logs
+      description: Retrieve a list of all logs in the system
+      operationId: getAllLogs
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          description: ID of the user to filter logs by (optional)
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: false
+          description: Action to filter logs by (optional)
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          required: false
+          description: Start date to filter logs by (optional)
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: false
+          description: End date to filter logs by (optional)
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          description: Number of logs per page (optional)
+          schema:
+            type: integer
+      responses:
+          "200":
+            description: List of logs retrieved successfully
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Log"
+          "400":
+            description: Bad request
+          "401":
+            $ref: "#/components/responses/Unauthorized"
+          "403":
+            $ref: "#/components/responses/Forbidden"
+          "404":
+            description: Log not found
+            $ref: "#/components/responses/NotFound"
+          "500":
+            $ref: "#/components/responses/InternalServerError"
+components:
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            example1:
+              summary: Unauthorized error
+              value:
+                trace-id: "12345"
+                message: "Unauthorized access"
+                timestamp: "2023-10-01T12:00:00Z"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            example1:
+              summary: Forbidden error
+              value:
+                trace-id: "12345"
+                message: "Access denied"
+                timestamp: "2023-10-01T12:00:00Z"
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            example1:
+              summary: Not Found error
+              value:
+                trace-id: "12345"
+                message: "Resource not found"
+                timestamp: "2023-10-01T12:00:00Z"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            example1:
+              summary: Internal Server Error
+              value:
+                trace-id: "12345"
+                message: "An unexpected error occurred"
+                timestamp: "2023-10-01T12:00:00Z"
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the user
+        lastNname:
+          type: string
+          description: Last name of the user
+        firstName:
+          type: string
+          description: First name of the user
+        password:
+          type: string
+          format: password
+          description: Password of the user
+        email:
+          type: string
+          format: email
+          description: Email address of the user
+        role:
+          type: string
+          description: Role of the user (e.g., admin, user)
+        scopes:
+          type: array
+          items:
+            type: string
+          description: List of scopes associated with the user
+        created_at:
+          type: string
+          format: date-time
+          description: Date and time when the user was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Date and time when the user was last updated
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the document
+        title:
+          type: string
+          description: Title of the document
+        description:
+          type: string
+          description: Description of the document
+        created_at:
+          type: string
+          format: date-time
+          description: Date and time when the document was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Date and time when the document was last updated
+        file_type:
+          type: string
+          description: Type of the document (e.g., pdf, image)
+        uploaded_by:
+          type: string
+          description: ID of the user who uploaded the document
+    Class:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the class
+        name:
+          type: string
+          description: Name of the class
+        teacher_id:
+          type: string
+          description: ID of the teacher associated with the class
+        studentsIDs:
+          type: array
+          items:
+            type: string
+          description: List of student IDs associated with the class
+        created_at:
+          type: string
+          format: date-time
+          description: Date and time when the class was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Date and time when the class was last updated
+    ClassFilled:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the class
+        name:
+          type: string
+          description: Name of the class
+        teacher:
+          $ref: "#/components/schemas/User"
+          description: Teacher associated with the class
+        students:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+            description: List of students associated with the class
+        created_at:
+          type: string
+          format: date-time
+          description: Date and time when the class was created
+    Timetable:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the class
+        start_time:
+          type: string
+          format: time
+          description: Start time of the class
+        end_time:
+          type: string
+          format: time
+          description: End time of the class
+        subject:
+          type: string
+          description: Subject of the class
+        teacher:
+          type: string
+          description: Name of the teacher for the class
+        location:
+          type: string
+          description: Location of the class (e.g., classroom number)
+    Examen:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the note
+        name:
+          type: string
+          description: Title of the note
+        description:
+          type: string
+          description: Description of the note
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: Unique identifier for the user
+              note:
+                type: number
+                format: float
+                description: Note of the user in the exam
+    Claims:
+      type: object
+      properties:
+        sub:
+          type: string
+          description: Subject of the token (user ID)
+        name:
+          type: string
+          description: Name of the user
+        email:
+          type: string
+          format: email
+          description: Email address of the user
+        scopes:
+          type: array
+          items:
+            type: string
+          description: List of scopes associated with the user
+        exp:
+          type: integer
+          format: int64
+          description: Expiration time of the token (in seconds since epoch)
+        iat:
+          type: integer
+          format: int64
+          description: Issued at time of the token (in seconds since epoch)
+        iss:
+          type: string
+          description: Issuer of the token (e.g., NextGes API)
+        aud:
+          type: string
+          description: Audience of the token (e.g., intended recipient)
+    Log:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the log entry
+        user_id:
+          type: string
+          description: ID of the user associated with the log entry
+        action:
+          type: string
+          description: Action performed by the user (e.g., login, logout)
+        description:
+          type: string
+          description: Description of the action performed
+        timestamp:
+          type: string
+          format: date-time
+          description: Date and time when the action was performed
+    ErrorResponse:
+      type: object
+      properties:
+        trace-id:
+          type: string
+          description: Unique identifier for the error trace
+        message:
+          type: string
+          description: Error message
+        timestamp:
+          type: string
+          format: date-time
+          description: Date and time when the error occurred
+      required:
+        - trace-id
+        - message
+        - timestamp
