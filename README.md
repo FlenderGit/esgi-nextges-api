@@ -27,8 +27,8 @@ npm run build
 ```
 
 ## 📘 Documentation
-* [API Documentation](/redoc-static.html)
-* [API Endpoint Documentation](/redoc-static.html)
+* [API Documentation](redoc-static.html)
+* [API Endpoint Documentation](V1-API-technical-document.pdf)
 
 ## 🏗️ Application architecture
 
