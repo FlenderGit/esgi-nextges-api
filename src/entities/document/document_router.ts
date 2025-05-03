@@ -5,13 +5,13 @@ import { check_scope } from "../../middleware/auth_middleware";
 import multer from "multer";
 import { IDocumentEntity } from "./document";
 
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ dest: "uploads/" });
 
 interface DocumentUploadRequest {
   file: Express.Multer.File;
   name: string;
   description: string;
-  classeId: string|null;
+  classeId: string | null;
 }
 
 class DocumentRouter extends BaseRouter<DocumentRepository> {
@@ -44,15 +44,64 @@ class DocumentRouter extends BaseRouter<DocumentRepository> {
     }
   }
 
+  async getAll(req: Request, res: Response) {
+    const documents = await this.repository.findAll({
+      where: {
+        classeId: req.query.classeId,
+      },
+    });
+    if (documents) {
+      res.status(200).json(documents);
+    } else {
+      res.status(500).json({ message: "Error fetching documents" });
+    }
+  }
+
+  async getById(req: Request, res: Response) {
+    const id = req.params.id;
+    // get document from upload folder
+    if (!id) {
+      res.status(400).json({ message: "Missing document ID" });
+      return;
+    }
+    const document = await this.repository.findById(id);
+    if (!document) {
+      res.status(404).json({ message: "Document not found" });
+      return;
+    }
+
+    // send the document file
+    res.download(document.url, (err) => {
+      if (err) {
+        res.status(500).json({ message: "Error downloading document" });
+      }
+    });
+  }
+
   getRouter(): Router {
     const router = Router();
-    router.get("/", check_scope("read_all:user"), this.getAll.bind(this));
-    router.get("/:id", check_scope("read_one:user"), this.getById.bind(this));
-    router.post("/", check_scope("create:document"), upload.single("file"), this.uploadDocument.bind(this));
-    router.put("/:id", check_scope("update:user"), this.update.bind(this));
-    router.delete("/:id", check_scope("delete:user"), this.delete.bind(this));
+    router.get("/", check_scope("read_all:document"), this.getAll.bind(this));
+    router.get(
+      "/:id",
+      check_scope("read_one:document"),
+      this.getById.bind(this),
+    );
+    router.post(
+      "/",
+      check_scope("create:document"),
+      upload.single("file"),
+      this.uploadDocument.bind(this),
+    );
+    router.put("/:id", check_scope("update:document"), this.update.bind(this));
+    router.delete(
+      "/:id",
+      check_scope("delete:document"),
+      this.delete.bind(this),
+    );
     return router;
   }
 }
 
-export const document_router = new DocumentRouter(document_repository).getRouter();
+export const document_router = new DocumentRouter(
+  document_repository,
+).getRouter();

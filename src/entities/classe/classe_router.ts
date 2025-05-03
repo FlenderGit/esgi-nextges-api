@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { BaseRouter } from "../base/base_router";
 import { classe_repository, ClasseRepository } from "./classe_repository";
+import { check_scope } from "../../middleware/auth_middleware";
 
 class ClasseRouter extends BaseRouter<ClasseRepository> {
   constructor(classeRepository: ClasseRepository) {
@@ -53,17 +54,33 @@ class ClasseRouter extends BaseRouter<ClasseRepository> {
     const router = super.getRouter();
 
     // Simple CRUD operations
-    router.get("/", this.getAll.bind(this));
-    router.get("/:id", this.getById.bind(this));
-    router.post("/", this.create.bind(this));
-    router.put("/:id", this.update.bind(this));
-    router.delete("/:id", this.delete.bind(this));
+    router.get("/", check_scope("read_all:course"), this.getAll.bind(this));
+    router.get("/:id", check_scope("read_one:course"), this.getById.bind(this));
+    router.post("/", check_scope("create:course"), this.create.bind(this));
+    router.put("/:id", check_scope("update:course"), this.update.bind(this));
+    router.delete("/:id", check_scope("delete:course"), this.delete.bind(this));
 
     // examen
-    router.get("/:id/examen", this.getExamens.bind(this));
-    router.post("/:id/examen", this.createExamen.bind(this));
-    router.put("/:id/examen", this.updateExamen.bind(this));
-    router.delete("/:id/examen/:id_examen", this.deleteExamen.bind(this));
+    router.get(
+      "/:id/examen",
+      check_scope("read_one:examen"),
+      this.getExamens.bind(this),
+    );
+    router.post(
+      "/:id/examen",
+      check_scope("create:examen"),
+      this.createExamen.bind(this),
+    );
+    router.put(
+      "/:id/examen",
+      check_scope("update:examen"),
+      this.updateExamen.bind(this),
+    );
+    router.delete(
+      "/:id/examen/:id_examen",
+      check_scope("delete:examen"),
+      this.deleteExamen.bind(this),
+    );
 
     return router;
   }
