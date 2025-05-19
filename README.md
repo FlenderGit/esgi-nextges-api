@@ -31,6 +31,7 @@ npm run build
 * [API Endpoint Documentation](V1-API-technical-document.pdf)
 
 ## 🏗️ Application architecture
+This project's architecture is based on the [Vertical Slice Architecture](https://www.milanjovanovic.tech/blog/vertical-slice-architecture) to simply add new functionnalities on the futur. Theremore, it is easier to move around the projet as a developper.
 
 * **/src**
     * **/@types**: Add types within the Request type of Express
