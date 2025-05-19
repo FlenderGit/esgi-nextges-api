@@ -41,4 +41,4 @@ npm run build
     * **app.ts**: The app
     * **server.ts**: The entrypoint of the application
 
-* /build: This application use Typescript, so it should be compiled
+* **/build**: This application use Typescript, so it should be compiled
